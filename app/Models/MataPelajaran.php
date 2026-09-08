@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class MataPelajaran extends Model
 {
-    use HasFactory;
+    protected $fillable = ['kode_mapel', 'nama_mapel', 'kategori', 'guru_id'];
 
-    // Matikan perlindungan Mass Assignment agar semua kolom bisa diisi
-    protected $guarded = [];
+    public function guru()
+    {
+        return $this->belongsTo(Guru::class, 'guru_id');
+    }
 }

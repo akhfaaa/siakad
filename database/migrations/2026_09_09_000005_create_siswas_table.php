@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('nis', 10)->unique();
             $table->string('nama_lengkap');
             $table->enum('jenis_kelamin', ['L', 'P']);
-            $table->foreignId('rombel_id')->nullable()->after('jenis_kelamin')->constrained('rombels')->nullOnDelete();
+            $table->foreignId('rombel_id')->nullable()->constrained('rombels')->nullOnDelete();
             // Catatan: Kolom relasi ke tabel Kelas/Rombel akan kita tambahkan di tahap selanjutnya
             $table->timestamps();
         });

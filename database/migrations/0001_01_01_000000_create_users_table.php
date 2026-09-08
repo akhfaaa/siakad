@@ -19,14 +19,7 @@ return new class extends Migration
             $table->string('password');
 
             // Kolom penentu hak akses pengguna
-            $table->enum('role', [
-                'siswa',
-                'orang_tua',
-                'guru_mapel',
-                'wali_kelas',
-                'tu',
-                'kepala_sekolah'
-            ])->default('siswa');
+            $table->string('role')->default('siswa');
 
             $table->rememberToken();
             $table->timestamps();

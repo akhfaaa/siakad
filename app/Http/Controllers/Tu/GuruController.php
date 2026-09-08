@@ -4,128 +4,121 @@ namespace App\Http\Controllers\Tu;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Siswa;
+use App\Models\Guru;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
-class SiswaController extends Controller
+class GuruController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Siswa::query();
+        $query = Guru::query();
 
         if ($request->has('cari') && $request->cari != '') {
             $cari = $request->cari;
             $query->where('nama_lengkap', 'like', "%{$cari}%")
-                ->orWhere('nis', 'like', "%{$cari}%");
+                ->orWhere('nip', 'like', "%{$cari}%");
         }
 
-        $daftarSiswa = $query->orderBy('nama_lengkap', 'asc')->paginate(10);
-        $daftarSiswa->appends($request->all());
+        $daftarGuru = $query->orderBy('nama_lengkap', 'asc')->paginate(10);
+        $daftarGuru->appends($request->all());
 
-        return view('tu.siswa.index', compact('daftarSiswa'));
+        return view('tu.guru.index', compact('daftarGuru'));
     }
 
     public function create()
     {
-        return view('tu.siswa.create');
+        return view('tu.guru.create');
     }
 
     public function store(Request $request)
     {
-        // 1. Validasi Input
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
-            'nis' => 'required|string|unique:siswas,nis',
-            'nisn' => 'required|string|unique:siswas,nisn',
+            'nip' => 'nullable|string|max:30|unique:gurus,nip',
             'jenis_kelamin' => 'required|in:L,P',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
         ]);
 
-        // 2. Mulai Transaksi Database
         DB::beginTransaction();
-
         try {
-            // Buat akun User
             $user = User::create([
                 'name' => $request->nama_lengkap,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role' => 'siswa',
+                'role' => 'guru', // Tetapkan peran sebagai guru
             ]);
 
-            // Buat profil Siswa
-            Siswa::create([
+            Guru::create([
                 'user_id' => $user->id,
                 'nama_lengkap' => $request->nama_lengkap,
-                'nis' => $request->nis,
-                'nisn' => $request->nisn,
+                'nip' => $request->nip,
                 'jenis_kelamin' => $request->jenis_kelamin,
             ]);
 
-            // Jika semua aman, permanenkan data (Commit)
             DB::commit();
-            return redirect()->route('tu.siswa')->with('success', 'Data siswa dan akun akses berhasil dibuat.');
+            return redirect()->route('tu.guru')->with('success', 'Data guru dan akun akses berhasil ditambahkan.');
         } catch (\Exception $e) {
-            // Jika ada yang gagal, batalkan SEMUA penyimpanan (Rollback)
             DB::rollBack();
-
-            // Kembalikan user ke form beserta pesan error sistem
             return back()->withInput()->with('error_system', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
     }
 
     public function edit($id)
     {
-        // Tarik data siswa beserta relasi akun (User) untuk mengambil email
-        $siswa = Siswa::with('user')->findOrFail($id);
-        return view('tu.siswa.edit', compact('siswa'));
+        $guru = Guru::with('user')->findOrFail($id);
+        return view('tu.guru.edit', compact('guru'));
     }
 
     public function update(Request $request, $id)
     {
-        $siswa = Siswa::findOrFail($id);
-        $user = User::findOrFail($siswa->user_id);
+        $guru = Guru::findOrFail($id);
+        $user = User::findOrFail($guru->user_id);
 
-        // 1. Validasi Input (Abaikan aturan unique jika datanya milik ID ini sendiri)
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
-            'nis' => 'required|string|unique:siswas,nis,' . $siswa->id,
-            'nisn' => 'required|string|unique:siswas,nisn,' . $siswa->id,
+            'nip' => 'nullable|string|max:30|unique:gurus,nip,' . $guru->id,
             'jenis_kelamin' => 'required|in:L,P',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'password' => 'nullable|min:6', // Nullable: Boleh kosong jika tidak diubah
+            'password' => 'nullable|min:6',
         ]);
 
         DB::beginTransaction();
         try {
-            // 2. Siapkan pembaruan akun User
             $userData = [
                 'name' => $request->nama_lengkap,
                 'email' => $request->email,
             ];
 
-            // Perbarui password HANYA jika form password diisi
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
             }
             $user->update($userData);
 
-            // 3. Perbarui profil akademik Siswa
-            $siswa->update([
+            $guru->update([
                 'nama_lengkap' => $request->nama_lengkap,
-                'nis' => $request->nis,
-                'nisn' => $request->nisn,
+                'nip' => $request->nip,
                 'jenis_kelamin' => $request->jenis_kelamin,
             ]);
 
             DB::commit();
-            return redirect()->route('tu.siswa')->with('success', 'Data siswa berhasil diperbarui.');
+            return redirect()->route('tu.guru')->with('success', 'Data guru berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withInput()->with('error_system', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
+    }
+
+    public function destroy($id)
+    {
+        $guru = Guru::findOrFail($id);
+        $user = User::findOrFail($guru->user_id);
+
+        // Menghapus User otomatis menghapus Guru karena ada constraint onDelete('cascade') di migrasi
+        $user->delete();
+
+        return redirect()->route('tu.guru')->with('success', 'Data guru berhasil dihapus.');
     }
 }

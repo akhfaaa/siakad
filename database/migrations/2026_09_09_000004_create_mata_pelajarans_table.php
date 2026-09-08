@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('kode_mapel', 20)->unique();
             $table->string('nama_mapel');
-            // Kategori kurikulum SMK
-            $table->enum('kelompok', [
-                'Muatan Nasional',
-                'Muatan Kewilayahan',
-                'Muatan Peminatan Kejuruan'
-            ]);
+
+            // Pembeda mapel umum dan praktik kejuruan
+            $table->enum('kategori', ['Umum', 'Kejuruan'])->default('Umum');
+
+            // Relasi ke Guru Pengampu
+            $table->foreignId('guru_id')->nullable()->constrained('gurus')->nullOnDelete();
+
             $table->timestamps();
         });
     }
