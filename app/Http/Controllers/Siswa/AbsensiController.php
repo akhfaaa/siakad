@@ -4,80 +4,64 @@ namespace App\Http\Controllers\Siswa;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Absensi;
 use App\Models\Siswa;
+use Carbon\Carbon;
 
 class AbsensiController extends Controller
 {
     public function index()
     {
-        // Set zona waktu ke WITA sesuai lokasi (Tanah Bumbu)
-        Carbon::setLocale('id');
-        $waktuSekarang = Carbon::now('Asia/Makassar');
-
-        $hariIniStr = $waktuSekarang->isoFormat('dddd, D MMMM Y');
-        $jamSekarang = $waktuSekarang->format('H:i');
-        $tanggalHariIni = $waktuSekarang->format('Y-m-d');
-
-        // Ambil data siswa yang sedang login
         $siswa = Siswa::where('user_id', Auth::id())->firstOrFail();
 
-        // Cek apakah siswa sudah absen hari ini
+        // Ambil data absensi khusus hari ini
         $absensiHariIni = Absensi::where('siswa_id', $siswa->id)
-            ->where('tanggal', $tanggalHariIni)
+            ->where('tanggal', Carbon::today()->format('Y-m-d'))
             ->first();
 
-        // Ambil riwayat absen bulan ini (maksimal 30 hari terakhir)
-        $riwayatAbsensi = Absensi::where('siswa_id', $siswa->id)
-            ->orderBy('tanggal', 'desc')
-            ->limit(30)
-            ->get();
-
-        return view('siswa.absensi.index', compact(
-            'hariIniStr',
-            'jamSekarang',
-            'absensiHariIni',
-            'riwayatAbsensi'
-        ));
+        return view('siswa.absensi.index', compact('absensiHariIni'));
     }
 
+    // Nama fungsi disesuaikan menjadi absenMasuk
     public function absenMasuk(Request $request)
     {
-        $waktuSekarang = Carbon::now('Asia/Makassar');
         $siswa = Siswa::where('user_id', Auth::id())->firstOrFail();
+        $tanggal = Carbon::today()->format('Y-m-d');
 
-        // Tentukan status kehadiran (Anggap batas masuk 07:30 WITA)
-        $batasMasuk = Carbon::createFromTime(7, 30, 0, 'Asia/Makassar');
-        $status = $waktuSekarang->greaterThan($batasMasuk) ? 'Sakit' : 'Hadir';
-        // Catatan: 'Sakit/Izin/Alpha' biasanya diinput terpisah, tapi kita set Hadir/Terlambat(Sakit sbg placeholder sesuai enum)
-        // Karena enum kita: ['Hadir', 'Sakit', 'Izin', 'Alpha'], jika lewat jam bisa ditandai Alpha/Hadir dengan catatan.
-        // Untuk amannya, kita set 'Hadir' dulu.
+        // Pastikan belum ada data hari ini sebelum membuat baru
+        $cekAbsensi = Absensi::where('siswa_id', $siswa->id)->where('tanggal', $tanggal)->first();
 
-        Absensi::create([
-            'siswa_id' => $siswa->id,
-            'tanggal' => $waktuSekarang->format('Y-m-d'),
-            'waktu_masuk' => $waktuSekarang->format('H:i:s'),
-            'status' => 'Hadir',
-        ]);
+        if (!$cekAbsensi) {
+            Absensi::create([
+                'siswa_id' => $siswa->id,
+                'tanggal' => $tanggal,
+                'waktu_masuk' => Carbon::now()->format('H:i:s'),
+                'status' => 'Hadir'
+            ]);
+            return back()->with('success', 'Kehadiran masuk berhasil dicatat.');
+        }
 
-        return redirect()->route('siswa.absensi')->with('success', 'Berhasil melakukan absen masuk.');
+        return back()->with('error', 'Anda sudah melakukan presensi masuk hari ini.');
     }
 
+    // Nama fungsi disesuaikan menjadi absenPulang
     public function absenPulang(Request $request)
     {
-        $waktuSekarang = Carbon::now('Asia/Makassar');
         $siswa = Siswa::where('user_id', Auth::id())->firstOrFail();
+        $tanggal = Carbon::today()->format('Y-m-d');
 
-        $absensi = Absensi::where('siswa_id', $siswa->id)
-            ->where('tanggal', $waktuSekarang->format('Y-m-d'))
-            ->firstOrFail();
+        // Cari data absen masuk hari ini
+        $absensi = Absensi::where('siswa_id', $siswa->id)->where('tanggal', $tanggal)->first();
 
-        $absensi->update([
-            'waktu_pulang' => $waktuSekarang->format('H:i:s')
-        ]);
+        if ($absensi) {
+            // Lakukan UPDATE data yang sudah ada, BUKAN insert baru
+            $absensi->update([
+                'waktu_pulang' => Carbon::now()->format('H:i:s')
+            ]);
+            return back()->with('success', 'Presensi pulang berhasil dicatat. Hati-hati di jalan!');
+        }
 
-        return redirect()->route('siswa.absensi')->with('success', 'Berhasil melakukan absen pulang.');
+        return back()->with('error', 'Anda belum melakukan presensi masuk hari ini.');
     }
 }

@@ -26,6 +26,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/siswa/jurnal', [\App\Http\Controllers\Siswa\JurnalController::class, 'index'])->name('siswa.jurnal');
     Route::get('/siswa/jurnal/tulis', [\App\Http\Controllers\Siswa\JurnalController::class, 'create'])->name('siswa.jurnal.create');
     Route::post('/siswa/jurnal', [\App\Http\Controllers\Siswa\JurnalController::class, 'store'])->name('siswa.jurnal.store');
+
+    // Rute Jurnal PKL Guru
+    Route::get('/guru/jurnal', [\App\Http\Controllers\Guru\JurnalController::class, 'index'])->name('guru.jurnal');
+    Route::post('/guru/jurnal/{id}/validasi', [\App\Http\Controllers\Guru\JurnalController::class, 'validasi'])->name('guru.jurnal.validasi');
+
+    // Rute Nilai Akademik Guru
+    Route::get('/guru/nilai', [\App\Http\Controllers\Guru\NilaiController::class, 'index'])->name('guru.nilai');
+    Route::post('/guru/nilai', [\App\Http\Controllers\Guru\NilaiController::class, 'store'])->name('guru.nilai.store');
+
+    // Rute E-Raport Siswa
+    Route::get('/siswa/raport', [\App\Http\Controllers\Siswa\RaportController::class, 'index'])->name('siswa.raport');
+
+    // Rute Wali Kelas
+    Route::get('/walikelas/raport', [\App\Http\Controllers\WaliKelas\RaportController::class, 'index'])->name('walikelas.raport');
+    Route::get('/walikelas/raport/{id}/cetak', [\App\Http\Controllers\WaliKelas\RaportController::class, 'cetak'])->name('walikelas.raport.cetak');
+
+    // Rute Tata Usaha (TU) / Admin
+    Route::get('/tu/siswa', [\App\Http\Controllers\Tu\SiswaController::class, 'index'])->name('tu.siswa');
+    Route::get('/tu/siswa/create', [\App\Http\Controllers\Tu\SiswaController::class, 'create'])->name('tu.siswa.create');
+    Route::post('/tu/siswa', [\App\Http\Controllers\Tu\SiswaController::class, 'store'])->name('tu.siswa.store');
 });
 
 Route::middleware('auth')->group(function () {

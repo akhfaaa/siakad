@@ -1,52 +1,110 @@
-<x-guest-layout>
-    <!-- Logo & Judul -->
-    <div class="text-center mb-8 sm:mb-10">
-        <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-5 drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] hover:scale-105 transition-transform duration-500 ease-out">
-            <img src="{{ asset('images/smk.png') }}" alt="Logo SMKN 1 Simpang Empat" class="w-full h-full object-contain">
-        </div>
-        <h1 class="text-xl sm:text-2xl font-bold text-white tracking-tight">SIAKAD Vokasi</h1>
-        <p class="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-1.5 font-medium tracking-wide">SMKN 1 Simpang Empat</p>
-    </div>
+<!DOCTYPE html>
+<html lang="id">
 
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Masuk - SIAKAD</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <form method="POST" action="{{ route('login') }}" class="space-y-6">
-        @csrf
+    <!-- Menggunakan font Inter sebagai alternatif gratis yang paling mirip dengan font Apple San Francisco -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
 
-        <!-- Email Address -->
-        <div>
-            <label for="email" class="block text-sm font-medium text-slate-300 mb-2">Email Terdaftar</label>
-            <input id="email" type="email" name="email" :value="old('email')" required autofocus autocomplete="username"
-                class="block w-full px-5 py-3.5 rounded-xl bg-slate-900/50 border border-white/[0.06] text-white placeholder-slate-500 focus:bg-slate-900/80 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all shadow-inner backdrop-blur-md"
-                placeholder="nama@smk.com">
-            <x-input-error :messages="$errors->get('email')" class="mt-2 text-sm text-red-400" />
-        </div>
+<body class="bg-[#f5f5f7] font-['Inter'] antialiased text-[#1d1d1f] selection:bg-[#0071e3]/20">
 
-        <!-- Password -->
-        <div>
-            <div class="flex justify-between items-center mb-2">
-                <label for="password" class="block text-sm font-medium text-slate-300">Kata Sandi</label>
-                @if (Route::has('password.request'))
-                <a class="text-xs font-medium text-slate-400 hover:text-white transition-colors" href="{{ route('password.request') }}">
-                    Lupa sandi?
-                </a>
-                @endif
+    <!-- Navbar Minimalis ala Apple -->
+    <!-- <nav class="w-full bg-white/70 backdrop-blur-md border-b border-black/[0.05] fixed top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-center h-12 items-center">
+                <span class="font-semibold text-lg tracking-tight">SIAKAD SMK TUPAT</span>
             </div>
-            <input id="password" type="password" name="password" required autocomplete="current-password"
-                class="block w-full px-5 py-3.5 rounded-xl bg-slate-900/50 border border-white/[0.06] text-white placeholder-slate-500 focus:bg-slate-900/80 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all shadow-inner backdrop-blur-md"
-                placeholder="••••••••">
-            <x-input-error :messages="$errors->get('password')" class="mt-2 text-sm text-red-400" />
+        </div>
+    </nav> -->
+
+    <!-- Kontainer Form -->
+    <div class="min-h-screen flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 pt-20">
+
+        <!-- Header Typography & Logo -->
+        <div class="text-center mb-10 flex flex-col items-center">
+            <!-- Tempat Logo SMK -->
+            <img src="{{ asset('images/smk.png') }}" alt="Logo SMKN 1 Simpang Empat" class="w-24 h-24 mb-6 drop-shadow-sm object-contain">
+
+            <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight text-[#1d1d1f]">Masuk ke Portal.</h1>
+            <p class="mt-3 text-[17px] text-[#86868b]">Gunakan kredensial akademik Anda.</p>
         </div>
 
-        <!-- Remember Me -->
-        <div class="flex items-center pt-2">
-            <input id="remember_me" type="checkbox" name="remember" class="rounded border-white/10 bg-slate-900/50 text-blue-500 shadow-sm focus:ring-blue-500/50 focus:ring-offset-slate-900 w-4 h-4 cursor-pointer transition-all">
-            <label for="remember_me" class="ml-3 text-sm text-slate-400 cursor-pointer hover:text-slate-300 transition-colors">Ingat perangkat ini</label>
+        <div class="max-w-[420px] w-full">
+            <!-- Session Status -->
+            @if (session('status'))
+            <div class="mb-4 text-sm font-medium text-emerald-600 text-center">
+                {{ session('status') }}
+            </div>
+            @endif
+
+            <!-- Error Messages -->
+            @if ($errors->any())
+            <div class="mb-4 text-sm text-red-600 text-center bg-red-50 py-3 rounded-xl">
+                Kredensial yang diberikan tidak cocok.
+            </div>
+            @endif
+
+            <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                @csrf
+
+                <!-- Kontainer Input yang Menyatu (Apple Style) -->
+                <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-[#d2d2d7] overflow-hidden">
+
+                    <!-- Input Email -->
+                    <div class="relative border-b border-[#d2d2d7]">
+                        <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="Email atau ID Pengguna"
+                            class="peer block w-full px-4 py-4 bg-transparent border-none focus:ring-0 text-[17px] placeholder-transparent">
+                        <label for="email" class="absolute left-4 top-1.5 text-xs text-[#86868b] transition-all peer-placeholder-shown:text-[17px] peer-placeholder-shown:top-4 peer-focus:top-1.5 peer-focus:text-xs">
+                            Email atau ID Pengguna
+                        </label>
+                    </div>
+
+                    <!-- Input Password -->
+                    <div class="relative">
+                        <input id="password" type="password" name="password" required placeholder="Kata Sandi"
+                            class="peer block w-full px-4 py-4 bg-transparent border-none focus:ring-0 text-[17px] placeholder-transparent">
+                        <label for="password" class="absolute left-4 top-1.5 text-xs text-[#86868b] transition-all peer-placeholder-shown:text-[17px] peer-placeholder-shown:top-4 peer-focus:top-1.5 peer-focus:text-xs">
+                            Kata Sandi
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input id="remember_me" type="checkbox" name="remember" class="w-4 h-4 rounded text-[#0071e3] border-[#d2d2d7] focus:ring-[#0071e3] focus:ring-offset-0">
+                        <span class="text-sm text-[#1d1d1f]">Ingat saya</span>
+                    </label>
+
+                    @if (Route::has('password.request'))
+                    <a href="{{ route('password.request') }}" class="text-sm text-[#0071e3] hover:underline">
+                        Lupa kata sandi?
+                    </a>
+                    @endif
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="w-full py-3.5 px-4 rounded-xl text-[17px] font-semibold text-white bg-[#0071e3] hover:bg-[#0077ED] active:scale-[0.98] transition-all duration-200">
+                        Lanjutkan
+                    </button>
+                </div>
+            </form>
         </div>
 
-        <!-- Submit Button -->
-        <button type="submit" class="w-full mt-4 flex justify-center py-3.5 px-4 border border-white/10 rounded-xl shadow-lg shadow-blue-900/20 text-sm font-bold text-white bg-blue-600/90 hover:bg-blue-500 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 focus:ring-blue-500 transition-all duration-300 active:scale-[0.98]">
-            Login
-        </button>
-    </form>
-</x-guest-layout>
+        <!-- Footer -->
+        <div class="mt-16 border-t border-[#d2d2d7] pt-8 max-w-md w-full text-center">
+            <p class="text-xs text-[#86868b]">
+                Sistem Informasi Akademik <br> Hak Cipta © 2026 SMKN 1 Simpang Empat.
+            </p>
+        </div>
+
+    </div>
+</body>
+
+</html>

@@ -1,126 +1,92 @@
 <x-dashboard-layout>
-    <div class="max-w-7xl mx-auto space-y-6">
+    <div class="max-w-4xl mx-auto space-y-6">
 
-        <!-- Header Halaman -->
         <div>
-            <h2 class="text-2xl font-bold text-white tracking-tight">Presensi Harian</h2>
-            <p class="text-sm text-slate-400 mt-1">Rekam kehadiran Anda hari ini. Batas waktu masuk adalah 07.30 WITA.</p>
+            <h2 class="text-2xl font-semibold tracking-tight text-[#1d1d1f]">Presensi Harian</h2>
+            <p class="text-[15px] text-[#86868b] mt-1">Jangan lupa mencatat kehadiran Anda setiap hari.</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        @if(session('success'))
+        <div class="p-4 rounded-xl bg-emerald-50 text-emerald-700 text-[14px] font-medium border border-emerald-100">
+            {{ session('success') }}
+        </div>
+        @endif
 
-            <!-- Panel Kiri: Form Aksi Presensi -->
-            <div class="col-span-1 bg-slate-900/50 backdrop-blur-xl border border-white/[0.08] shadow-lg shadow-blue-900/10 rounded-2xl p-6 flex flex-col h-fit">
+        @if(session('error'))
+        <div class="p-4 rounded-xl bg-red-50 text-red-700 text-[14px] font-medium border border-red-100">
+            {{ session('error') }}
+        </div>
+        @endif
 
-                <div class="text-center mb-8">
-                    <p class="text-slate-400 text-sm font-medium mb-1">{{ $hariIniStr }}</p>
-                    <div class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 tracking-tighter">
-                        {{ $jamSekarang }}
-                    </div>
-                    <p class="text-xs text-slate-500 mt-2">Waktu Sistem Server (WITA)</p>
+        <!-- Widget Jam Real-time -->
+        <div class="text-center py-6">
+            <p class="text-[13px] text-[#86868b] font-medium uppercase tracking-wider mb-2">Waktu Saat Ini</p>
+            <div id="jam-realtime" class="text-5xl sm:text-6xl font-semibold tracking-tight text-[#1d1d1f]" style="font-variant-numeric: tabular-nums;">
+                --:--:--
+            </div>
+            <p class="text-[15px] text-[#515154] mt-3">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</p>
+        </div>
+
+        <!-- Panel Aksi Presensi -->
+        <div class="bg-white rounded-3xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-[#d2d2d7]/50 p-6 md:p-8 flex flex-col md:flex-row items-center justify-around gap-6">
+
+            <div class="text-center w-full">
+                <p class="text-[13px] text-[#86868b] font-medium mb-3 uppercase tracking-wider">Jam Masuk</p>
+                @if($absensiHariIni && $absensiHariIni->waktu_masuk)
+                <div class="py-3 px-6 rounded-2xl bg-[#f5f5f7] border border-[#d2d2d7]/50 inline-block">
+                    <span class="text-[20px] font-semibold text-[#1d1d1f]">{{ $absensiHariIni->waktu_masuk }}</span>
+                    <div class="text-[12px] text-emerald-600 font-medium mt-1">Telah Hadir</div>
                 </div>
-
-                <!-- Notifikasi Flash Message -->
-                @if(session('success'))
-                <div class="mb-4 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm font-medium text-center">
-                    {{ session('success') }}
-                </div>
+                @else
+                <form action="{{ route('siswa.absensi.masuk') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="w-full md:w-auto py-3 px-8 rounded-2xl text-[15px] font-semibold text-white bg-[#0071e3] hover:bg-[#0077ED] active:scale-[0.98] transition-all duration-200 shadow-sm">
+                        Catat Kehadiran Masuk
+                    </button>
+                </form>
                 @endif
+            </div>
 
-                <div class="space-y-4">
-                    <!-- Kondisi 1: Belum Absen Sama Sekali -->
-                    @if(!$absensiHariIni)
-                    <form method="POST" action="{{ route('siswa.absensi.masuk') }}">
-                        @csrf
-                        <button type="submit" class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-blue-600/90 border border-blue-500/50 shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:bg-blue-500 hover:shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all duration-300 active:scale-[0.98]">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                            </svg>
-                            Catat Kehadiran Masuk
-                        </button>
-                    </form>
-                    <button disabled class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl text-sm font-bold text-slate-500 bg-white/[0.02] border border-white/[0.05] cursor-not-allowed transition-all">
-                        <svg class="w-5 h-5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                        </svg>
+            <div class="hidden md:block w-px h-20 bg-[#d2d2d7]/50"></div>
+
+            <div class="text-center w-full">
+                <p class="text-[13px] text-[#86868b] font-medium mb-3 uppercase tracking-wider">Jam Pulang</p>
+                @if($absensiHariIni && $absensiHariIni->waktu_pulang)
+                <div class="py-3 px-6 rounded-2xl bg-[#f5f5f7] border border-[#d2d2d7]/50 inline-block">
+                    <span class="text-[20px] font-semibold text-[#1d1d1f]">{{ $absensiHariIni->waktu_pulang }}</span>
+                    <div class="text-[12px] text-[#86868b] font-medium mt-1">Selesai</div>
+                </div>
+                @else
+                <form action="{{ route('siswa.absensi.pulang') }}" method="POST">
+                    @csrf
+                    <button type="submit"
+                        @if(!$absensiHariIni || !$absensiHariIni->waktu_masuk) disabled @endif
+                        class="w-full md:w-auto py-3 px-8 rounded-2xl text-[15px] font-semibold transition-all duration-200 shadow-sm
+                        @if($absensiHariIni && $absensiHariIni->waktu_masuk) bg-[#1d1d1f] text-white hover:bg-black active:scale-[0.98]
+                        @else bg-[#f5f5f7] text-[#86868b] cursor-not-allowed border border-[#d2d2d7]/50 @endif">
                         Catat Kehadiran Pulang
                     </button>
-
-                    <!-- Kondisi 2: Sudah Absen Masuk, Belum Absen Pulang -->
-                    @elseif(!$absensiHariIni->waktu_pulang)
-                    <button disabled class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl text-sm font-bold text-slate-500 bg-white/[0.02] border border-white/[0.05] cursor-not-allowed transition-all">
-                        Tercatat Masuk: {{ \Carbon\Carbon::parse($absensiHariIni->waktu_masuk)->format('H:i') }}
-                    </button>
-                    <form method="POST" action="{{ route('siswa.absensi.pulang') }}">
-                        @csrf
-                        <button type="submit" class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-amber-600/90 border border-amber-500/50 shadow-[0_0_15px_rgba(217,119,6,0.3)] hover:bg-amber-500 hover:shadow-[0_0_25px_rgba(217,119,6,0.4)] transition-all duration-300 active:scale-[0.98]">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                            </svg>
-                            Catat Kehadiran Pulang
-                        </button>
-                    </form>
-
-                    <!-- Kondisi 3: Sudah Absen Pulang (Selesai Hari Ini) -->
-                    @else
-                    <button disabled class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl text-sm font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 cursor-not-allowed transition-all">
-                        Tercatat Masuk: {{ \Carbon\Carbon::parse($absensiHariIni->waktu_masuk)->format('H:i') }}
-                    </button>
-                    <button disabled class="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl text-sm font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 cursor-not-allowed transition-all">
-                        Tercatat Pulang: {{ \Carbon\Carbon::parse($absensiHariIni->waktu_pulang)->format('H:i') }}
-                    </button>
-                    @endif
-                </div>
-
-                <div class="mt-6 p-4 rounded-xl bg-blue-900/20 border border-blue-500/20 text-xs text-blue-300 leading-relaxed text-center">
-                    Absensi hanya dapat dilakukan 1 kali dalam sehari dan tidak dapat diubah setelah terekam sistem.
-                </div>
+                </form>
+                @endif
             </div>
-
-            <!-- Panel Kanan: Tabel Riwayat -->
-            <div class="col-span-1 lg:col-span-2 bg-slate-900/50 backdrop-blur-xl border border-white/[0.08] shadow-lg shadow-cyan-900/5 rounded-2xl overflow-hidden flex flex-col">
-                <div class="px-6 py-5 border-b border-white/[0.08] flex items-center justify-between">
-                    <h3 class="font-semibold text-white">Riwayat Kehadiran (Bulan Ini)</h3>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-300">
-                        <thead class="bg-white/[0.02] border-b border-white/[0.05] text-xs uppercase text-slate-400">
-                            <tr>
-                                <th scope="col" class="px-6 py-4 font-medium">Tanggal</th>
-                                <th scope="col" class="px-6 py-4 font-medium">Masuk</th>
-                                <th scope="col" class="px-6 py-4 font-medium">Pulang</th>
-                                <th scope="col" class="px-6 py-4 font-medium">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/[0.05]">
-                            @forelse($riwayatAbsensi as $riwayat)
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-white font-medium">
-                                    {{ \Carbon\Carbon::parse($riwayat->tanggal)->isoFormat('DD MMM YYYY') }}
-                                </td>
-                                <td class="px-6 py-4 text-emerald-400 font-mono">
-                                    {{ $riwayat->waktu_masuk ? \Carbon\Carbon::parse($riwayat->waktu_masuk)->format('H:i') : '--:--' }}
-                                </td>
-                                <td class="px-6 py-4 text-slate-400 font-mono">
-                                    {{ $riwayat->waktu_pulang ? \Carbon\Carbon::parse($riwayat->waktu_pulang)->format('H:i') : '--:--' }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase">
-                                        {{ $riwayat->status }}
-                                    </span>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="4" class="px-6 py-8 text-center text-slate-500">Belum ada riwayat kehadiran.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
         </div>
+
     </div>
+
+    <!-- Script JavaScript untuk Jam Real-time -->
+    <script>
+        function updateJamRealtime() {
+            const sekarang = new Date();
+            const jam = String(sekarang.getHours()).padStart(2, '0');
+            const menit = String(sekarang.getMinutes()).padStart(2, '0');
+            const detik = String(sekarang.getSeconds()).padStart(2, '0');
+
+            const elemenJam = document.getElementById('jam-realtime');
+            if (elemenJam) {
+                elemenJam.innerText = `${jam}:${menit}:${detik}`;
+            }
+        }
+        setInterval(updateJamRealtime, 1000);
+        updateJamRealtime();
+    </script>
 </x-dashboard-layout>

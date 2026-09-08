@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Nilai extends Model
 {
     use HasFactory;
 
+    // Definisikan secara eksplisit kolom yang boleh diisi
     protected $fillable = [
         'siswa_id',
         'mata_pelajaran_id',
@@ -19,22 +20,20 @@ class Nilai extends Model
         'nilai_uts',
         'nilai_uas',
         'nilai_praktik',
-        'nilai_akhir',
+        'nilai_akhir'
     ];
 
-    // Relasi ke Siswa
+    // Relasi untuk persiapan fitur E-Raport nanti
     public function siswa()
     {
         return $this->belongsTo(Siswa::class);
     }
 
-    // Relasi ke Mata Pelajaran
     public function mataPelajaran()
     {
-        return $this->belongsTo(MataPelajaran::class);
+        return $this->belongsTo(MataPelajaran::class, 'mata_pelajaran_id');
     }
 
-    // Relasi ke Guru Pengampu
     public function guru()
     {
         return $this->belongsTo(Pegawai::class, 'guru_id');
