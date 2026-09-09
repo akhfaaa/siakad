@@ -42,15 +42,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/walikelas/raport', [\App\Http\Controllers\WaliKelas\RaportController::class, 'index'])->name('walikelas.raport');
     Route::get('/walikelas/raport/{id}/cetak', [\App\Http\Controllers\WaliKelas\RaportController::class, 'cetak'])->name('walikelas.raport.cetak');
 
-    // Rute Tata Usaha (TU) / Admin
+    // Rute Tata Usaha (TU) - Manajemen Siswa
     Route::get('/tu/siswa', [\App\Http\Controllers\Tu\SiswaController::class, 'index'])->name('tu.siswa');
     Route::get('/tu/siswa/create', [\App\Http\Controllers\Tu\SiswaController::class, 'create'])->name('tu.siswa.create');
     Route::post('/tu/siswa', [\App\Http\Controllers\Tu\SiswaController::class, 'store'])->name('tu.siswa.store');
-
-    // Rute Edit & Update
     Route::get('/tu/siswa/{id}/edit', [\App\Http\Controllers\Tu\SiswaController::class, 'edit'])->name('tu.siswa.edit');
     Route::put('/tu/siswa/{id}', [\App\Http\Controllers\Tu\SiswaController::class, 'update'])->name('tu.siswa.update');
-
+    Route::delete('/tu/siswa/{id}', [\App\Http\Controllers\Tu\SiswaController::class, 'destroy'])->name('tu.siswa.destroy');
+    
     // Rute Tata Usaha (TU) - Manajemen Guru
     Route::get('/tu/guru', [\App\Http\Controllers\Tu\GuruController::class, 'index'])->name('tu.guru');
     Route::get('/tu/guru/create', [\App\Http\Controllers\Tu\GuruController::class, 'create'])->name('tu.guru.create');
@@ -66,6 +65,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tu/jurusan/{id}/edit', [\App\Http\Controllers\Tu\JurusanController::class, 'edit'])->name('tu.jurusan.edit');
     Route::put('/tu/jurusan/{id}', [\App\Http\Controllers\Tu\JurusanController::class, 'update'])->name('tu.jurusan.update');
     Route::delete('/tu/jurusan/{id}', [\App\Http\Controllers\Tu\JurusanController::class, 'destroy'])->name('tu.jurusan.destroy');
+
+    // Rute Tata Usaha (TU) - Manajemen Rombel
+    Route::get('/tu/rombel', [\App\Http\Controllers\Tu\RombelController::class, 'index'])->name('tu.rombel');
+    Route::get('/tu/rombel/create', [\App\Http\Controllers\Tu\RombelController::class, 'create'])->name('tu.rombel.create');
+    Route::post('/tu/rombel', [\App\Http\Controllers\Tu\RombelController::class, 'store'])->name('tu.rombel.store');
+    Route::get('/tu/rombel/{id}/edit', [\App\Http\Controllers\Tu\RombelController::class, 'edit'])->name('tu.rombel.edit');
+    Route::put('/tu/rombel/{id}', [\App\Http\Controllers\Tu\RombelController::class, 'update'])->name('tu.rombel.update');
+    Route::delete('/tu/rombel/{id}', [\App\Http\Controllers\Tu\RombelController::class, 'destroy'])->name('tu.rombel.destroy');
+
+    // Rute Tata Usaha (TU) - Manajemen Mata Pelajaran
+    Route::get('/tu/mapel', [\App\Http\Controllers\Tu\MapelController::class, 'index'])->name('tu.mapel');
+    Route::get('/tu/mapel/create', [\App\Http\Controllers\Tu\MapelController::class, 'create'])->name('tu.mapel.create');
+    Route::post('/tu/mapel', [\App\Http\Controllers\Tu\MapelController::class, 'store'])->name('tu.mapel.store');
+    Route::get('/tu/mapel/{id}/edit', [\App\Http\Controllers\Tu\MapelController::class, 'edit'])->name('tu.mapel.edit');
+    Route::put('/tu/mapel/{id}', [\App\Http\Controllers\Tu\MapelController::class, 'update'])->name('tu.mapel.update');
+    Route::delete('/tu/mapel/{id}', [\App\Http\Controllers\Tu\MapelController::class, 'destroy'])->name('tu.mapel.destroy');
+
+    // Rute Guru Pengampu
+    Route::get('/guru/nilai', [\App\Http\Controllers\Guru\NilaiController::class, 'index'])->name('guru.nilai');
 });
 
 Route::middleware('auth')->group(function () {

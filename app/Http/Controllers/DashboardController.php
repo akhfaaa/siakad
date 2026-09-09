@@ -9,17 +9,30 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        // Pastikan user sudah login
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
         $role = Auth::user()->role;
 
-        // Arahkan ke file view masing-masing berdasarkan role
-        return match ($role) {
-            'siswa' => view('dashboard.siswa'),
-            'orang_tua' => view('dashboard.orangtua'),
-            'guru_mapel' => view('dashboard.guru'),
-            'wali_kelas' => view('dashboard.walikelas'),
-            'tu' => view('dashboard.tu'),
-            'kepala_sekolah' => view('dashboard.kepsek'),
-            default => abort(403, 'Hak akses tidak dikenali oleh sistem.'),
-        };
+        // Arahkan ke file blade masing-masing berdasarkan role
+        switch ($role) {
+            case 'tu':
+            case 'admin':
+                return view('dashboard.tu');
+            case 'guru':
+                return view('dashboard.guru');
+            case 'siswa':
+                return view('dashboard.siswa');
+            case 'walikelas':
+                return view('dashboard.walikelas');
+            case 'kepsek':
+                return view('dashboard.kepsek');
+            case 'orangtua':
+                return view('dashboard.orangtua');
+            default:
+                abort(403, 'HAK AKSES TIDAK DIKENALI OLEH SISTEM.');
+        }
     }
 }

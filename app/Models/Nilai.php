@@ -2,40 +2,31 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Nilai extends Model
 {
     use HasFactory;
 
-    // Definisikan secara eksplisit kolom yang boleh diisi
-    protected $fillable = [
-        'siswa_id',
-        'mata_pelajaran_id',
-        'guru_id',
-        'tahun_ajaran',
-        'semester',
-        'nilai_tugas',
-        'nilai_uts',
-        'nilai_uas',
-        'nilai_praktik',
-        'nilai_akhir'
-    ];
+    // Mengizinkan semua kolom diisi kecuali ID utama (Solusi praktis untuk tabel dengan banyak kolom nilai)
+    protected $guarded = ['id'];
 
-    // Relasi untuk persiapan fitur E-Raport nanti
+    // Relasi ke tabel siswas
     public function siswa()
     {
         return $this->belongsTo(Siswa::class);
     }
 
+    // Relasi ke tabel mata_pelajarans
     public function mataPelajaran()
     {
-        return $this->belongsTo(MataPelajaran::class, 'mata_pelajaran_id');
+        return $this->belongsTo(MataPelajaran::class);
     }
 
+    // Relasi ke tabel gurus (Agar nama guru pengampu bisa tampil di raport)
     public function guru()
     {
-        return $this->belongsTo(Pegawai::class, 'guru_id');
+        return $this->belongsTo(Guru::class);
     }
 }

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('mata_pelajaran_id')->constrained('mata_pelajarans')->cascadeOnDelete();
 
             // Menyimpan NIP/ID Guru yang menginput nilai
-            $table->foreignId('guru_id')->constrained('pegawais')->cascadeOnDelete();
+            $table->foreignId('guru_id')->constrained('gurus')->onDelete('cascade');
 
             $table->string('tahun_ajaran', 10); // Contoh: 2026/2027
             $table->enum('semester', ['Ganjil', 'Genap']);

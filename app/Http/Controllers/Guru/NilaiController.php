@@ -4,75 +4,77 @@ namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Nilai;
-use App\Models\Siswa;
-use App\Models\Pegawai;
 use App\Models\MataPelajaran;
+use App\Models\Rombel;
+use App\Models\Siswa;
+use App\Models\Guru;
+use App\Models\Nilai; // Pastikan Model Nilai diimpor
+use Illuminate\Support\Facades\Auth;
 
 class NilaiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $guru = Pegawai::where('user_id', Auth::id())->firstOrFail();
+        $guru = Guru::where('user_id', Auth::id())->firstOrFail();
+        $mapels = MataPelajaran::where('guru_id', $guru->id)->get();
+        $rombels = Rombel::orderBy('tingkat', 'asc')->orderBy('nama_rombel', 'asc')->get();
 
-        // Ambil semua data siswa untuk dinilai
-        $daftarSiswa = Siswa::orderBy('nis')->get();
+        $siswas = collect();
+        if ($request->has('rombel_id') && $request->has('mapel_id')) {
+            // Ambil data siswa sekaligus memuat relasi nilainya (hanya untuk mapel yang sedang dipilih)
+            $siswas = Siswa::with(['nilais' => function ($query) use ($request) {
+                $query->where('mata_pelajaran_id', $request->mapel_id);
+            }])
+                ->where('rombel_id', $request->rombel_id)
+                ->orderBy('nama_lengkap', 'asc')
+                ->get();
+        }
 
-        // Ambil data nilai yang sudah pernah diinput oleh guru ini di semester berjalan
-        $riwayatNilai = Nilai::where('guru_id', $guru->id)
-            ->where('tahun_ajaran', '2026/2027')
-            ->where('semester', 'Ganjil')
-            ->get()
-            ->keyBy('siswa_id'); // Jadikan ID siswa sebagai key array untuk pencarian cepat di view
-
-        // Karena kita belum membuat seeder Mata Pelajaran khusus, kita buat data dummy instan di sini
-        // Di aplikasi nyata, ini diambil dari relasi jadwal mengajar guru
-        $mapel = MataPelajaran::firstOrCreate(
-            ['nama_mapel' => 'Kejuruan ' . $guru->spesialisasi_ilmu],
-            ['kode_mapel' => 'KJR-01', ]
-        );
-
-        return view('guru.nilai.index', compact('daftarSiswa', 'riwayatNilai', 'mapel', 'guru'));
+        return view('guru.nilai.index', compact('mapels', 'rombels', 'siswas', 'guru'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'siswa_id' => 'required|exists:siswas,id',
-            'mata_pelajaran_id' => 'required|exists:mata_pelajarans,id',
-            'nilai_tugas' => 'required|numeric|min:0|max:100',
-            'nilai_uts' => 'required|numeric|min:0|max:100',
-            'nilai_uas' => 'required|numeric|min:0|max:100',
-            'nilai_praktik' => 'required|numeric|min:0|max:100',
+            'mapel_id' => 'required|exists:mata_pelajarans,id',
+            'rombel_id' => 'required|exists:rombels,id',
+            'nilai' => 'required|array',
         ]);
 
-        $guru = Pegawai::where('user_id', Auth::id())->firstOrFail();
+        $guru = Guru::where('user_id', Auth::id())->firstOrFail();
 
-        // Hitung Nilai Akhir Otomatis
-        $nilaiAkhir = ($request->nilai_tugas * 0.20) +
-            ($request->nilai_uts * 0.25) +
-            ($request->nilai_uas * 0.25) +
-            ($request->nilai_praktik * 0.30);
+        // Tentukan Tahun Ajaran dan Semester aktif (bisa diotomatisasi dari tabel setting nanti)
+        $tahunAjaranAktif = '2026/2027';
+        $semesterAktif = 'Ganjil';
 
-        // Gunakan updateOrCreate agar guru bisa mengedit nilai yang sudah ada tanpa membuat data ganda
-        Nilai::updateOrCreate(
-            [
-                'siswa_id' => $request->siswa_id,
-                'mata_pelajaran_id' => $request->mata_pelajaran_id,
+        // Looping semua data siswa yang dikirim dari form
+        foreach ($request->nilai as $siswa_id => $dataNilai) {
+
+            // Susun data yang akan diisi/diperbarui
+            $kolomNilai = [
                 'guru_id' => $guru->id,
-                'tahun_ajaran' => '2026/2027',
-                'semester' => 'Ganjil',
-            ],
-            [
-                'nilai_tugas' => $request->nilai_tugas,
-                'nilai_uts' => $request->nilai_uts,
-                'nilai_uas' => $request->nilai_uas,
-                'nilai_praktik' => $request->nilai_praktik,
-                'nilai_akhir' => $nilaiAkhir,
-            ]
-        );
+                'uts' => $dataNilai['uts'] ?? null,
+                'uas' => $dataNilai['uas'] ?? null,
+                'praktik' => $dataNilai['praktik'] ?? null,
+            ];
 
-        return back()->with('success', 'Data nilai berhasil disimpan dan diperbarui.');
+            // Masukkan 16 tugas ke dalam array
+            for ($i = 1; $i <= 16; $i++) {
+                $kolomNilai['tugas_' . $i] = $dataNilai['tugas_' . $i] ?? null;
+            }
+
+            // Simpan atau Perbarui nilai berdasarkan Siswa, Mapel, Tahun Ajaran, dan Semester
+            Nilai::updateOrCreate(
+                [
+                    'siswa_id' => $siswa_id,
+                    'mata_pelajaran_id' => $request->mapel_id,
+                    'tahun_ajaran' => $tahunAjaranAktif,
+                    'semester' => $semesterAktif,
+                ],
+                $kolomNilai
+            );
+        }
+
+        return redirect()->back()->with('success', 'Seluruh nilai siswa berhasil disimpan!');
     }
 }
